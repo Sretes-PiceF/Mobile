@@ -1,12 +1,14 @@
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
+  const [isFollowing, setIsFollowing] = useState(false);
+  const followAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -23,6 +25,30 @@ export default function HomeScreen() {
     ]).start();
   }, [fadeAnim, scaleAnim]);
 
+  const toggleFollow = () => {
+    Animated.spring(followAnim, {
+      toValue: isFollowing ? 0 : 1,
+      friction: 5,
+      useNativeDriver: true,
+    }).start();
+    setIsFollowing(!isFollowing);
+  };
+
+  const followButtonScale = followAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [1, 0.9, 1]
+  });
+
+  const followButtonColor = followAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['#1DA1F2', '#E1E8ED']
+  });
+
+  const followButtonTextColor = followAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['#FFF', '#000']
+  });
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -36,36 +62,48 @@ export default function HomeScreen() {
             />
           </View>
           <View style={styles.profileContent}>
-            <Image
-              source={require('@/assets/images/smk6.png')}
-              style={styles.reactLogo}
-              contentFit='contain'
-            />
-            <View style={styles.schoolInfo}>
-              <View style={styles.nameContainer}>
-                <Text style={styles.schoolName}>@SMKN 6 MALANG</Text>
-                <MaterialIcons name="verified" size={18} color="#1DA1F2" style={styles.verifiedIcon} />
+            <View style={styles.centerContainer}>
+              <View style={styles.logoContainer}>
+                <Image
+                  source={require('@/assets/images/smk6.png')}
+                  style={styles.reactLogo}
+                  contentFit='contain'
+                />
               </View>
-              <Text style={styles.schoolHandle}>smk_6 official</Text>
-            </View>
-            <View style={styles.socialIcons}>
-              <TouchableOpacity>
-                <FontAwesome name="instagram" size={20} color="#E1306C" style={styles.icon} />
-              </TouchableOpacity>
-              <TouchableOpacity>
-                <FontAwesome name="facebook" size={20} color="#4267B2" style={styles.icon} />
-              </TouchableOpacity>
-              <TouchableOpacity>
-                <FontAwesome name="youtube" size={20} color="#FF0000" style={styles.icon} />
+              <View style={styles.schoolInfo}>
+                <View style={styles.nameContainer}>
+                  <Text style={styles.schoolName}>@SMKN 6 MALANG</Text>
+                  <MaterialIcons name="verified" size={18} color="#1DA1F2" style={styles.verifiedIcon} />
+                </View>
+                <Text style={styles.schoolHandle}>smk_6 official</Text>
+              </View>
+              <View style={styles.socialIcons}>
+                <TouchableOpacity>
+                  <FontAwesome name="instagram" size={20} color="#E1306C" style={styles.icon} />
+                </TouchableOpacity>
+                <TouchableOpacity>
+                  <FontAwesome name="facebook" size={20} color="#4267B2" style={styles.icon} />
+                </TouchableOpacity>
+                <TouchableOpacity>
+                  <FontAwesome name="youtube" size={20} color="#FF0000" style={styles.icon} />
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity onPress={toggleFollow} activeOpacity={0.8}>
+                <Animated.View style={[styles.followButton, {
+                  backgroundColor: followButtonColor,
+                  transform: [{ scale: followButtonScale }]
+                }]}>
+                  <Animated.Text style={[styles.followButtonText, { color: followButtonTextColor }]}>
+                    {isFollowing ? 'Following' : 'Follow'}
+                  </Animated.Text>
+                </Animated.View>
               </TouchableOpacity>
             </View>
           </View>
-          <TouchableOpacity style={styles.followButton}>
-            <Text style={styles.followButtonText}>Follow</Text>
-          </TouchableOpacity>
         </Animated.View>
       }>
 
+      {/* Rest of your content remains the same */}
       {/* Dekorasi Atas */}
       <View style={styles.topDecoration}>
         <View style={styles.decorationCircle} />
@@ -131,14 +169,16 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   headerContainer: {
-    flexDirection: 'row',
+    flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
     padding: 16,
     marginTop: 10,
     position: 'relative',
     overflow: 'hidden',
     borderRadius: 12,
     backgroundColor: 'rgba(255,255,255,0.9)',
+    minHeight: 200,
   },
   profileBackground: {
     position: 'absolute',
@@ -151,25 +191,38 @@ const styles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
     width: '100%',
+    height: '100%',
     opacity: 0.3,
   },
   profileContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    zIndex: 1,
     flex: 1,
+    width: '100%',
+    zIndex: 1,
+  },
+  centerContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    marginBottom: 12,
   },
   reactLogo: {
     height: 70,
     width: 70,
-    borderRadius: 12,
-    marginRight: 12,
-    borderWidth: 2,
-    borderColor: '#FFF',
+    borderRadius: 35,
   },
   schoolInfo: {
-    flexDirection: 'column',
-    flex: 1,
+    alignItems: 'center',
+    marginBottom: 12,
   },
   nameContainer: {
     flexDirection: 'row',
@@ -179,6 +232,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#000',
+    textAlign: 'center',
   },
   verifiedIcon: {
     marginLeft: 4,
@@ -187,23 +241,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#657786',
     marginTop: 2,
+    textAlign: 'center',
   },
   socialIcons: {
     flexDirection: 'row',
-    marginLeft: 10,
+    marginBottom: 12,
   },
   icon: {
-    marginHorizontal: 6,
+    marginHorizontal: 8,
   },
   followButton: {
     backgroundColor: '#1DA1F2',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 24,
+    paddingVertical: 8,
     borderRadius: 15,
-    marginLeft: 10,
   },
   followButtonText: {
-    color: '#FFF',
     fontWeight: 'bold',
     fontSize: 14,
   },
